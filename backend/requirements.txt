@@ -1,0 +1,12 @@
+fastapi[all]
+sqlalchemy
+alembic
+asyncpg
+greenlet
+pyjwt
+passlib[bcrypt]
+pytest
+pytest-asyncio
+httpx
+python-dotenv
+pydantic-settings
