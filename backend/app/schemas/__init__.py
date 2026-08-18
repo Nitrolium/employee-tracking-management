@@ -81,3 +81,4 @@ from .shift import ShiftCreate, ShiftResponse, ShiftAssignmentCreate, ShiftAssig
 from .task import TaskCreate, TaskUpdate, TaskResponse, TaskAssignmentCreate, TaskAssignmentResponse
 from .file import FileCreate, FileResponse
 from .submission import SubmissionCreate, SubmissionReview, SubmissionResponse
+from .activity import ActivitySyncRequest, ActivitySummaryResponse, ActivitySessionResponse, ActivityStatusEnum

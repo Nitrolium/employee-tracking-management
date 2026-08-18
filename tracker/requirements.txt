@@ -1,0 +1,4 @@
+pynput
+psutil
+pygetwindow; sys_platform == 'win32'
+requests

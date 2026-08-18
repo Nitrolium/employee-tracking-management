@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 export function ManagerDashboard({ onLogout }: { onLogout: () => void }) {
-  const [activeTab, setActiveTab] = useState<'EMPLOYEES' | 'SHIFTS' | 'TASKS' | 'SUBMISSIONS'>('EMPLOYEES')
+  const [activeTab, setActiveTab] = useState<'EMPLOYEES' | 'SHIFTS' | 'TASKS' | 'SUBMISSIONS' | 'ACTIVITY'>('EMPLOYEES')
   
   const employees = [
     { id: 1, name: 'Alice Smith', email: 'alice@test.com' },
@@ -11,6 +11,12 @@ export function ManagerDashboard({ onLogout }: { onLogout: () => void }) {
   const tasks = [
     { id: 1, title: 'Build Database Schema', assignedTo: 'Alice Smith', status: 'IN_PROGRESS', deadline: '2023-11-01' },
     { id: 2, title: 'Write API Documentation', assignedTo: 'Bob Johnson', status: 'SUBMITTED', deadline: '2023-10-25' }
+  ]
+
+  const activityLogs = [
+    { id: 1, employee: 'Alice Smith', time: '10:00 - 10:05 AM', activeMin: 4, idleMin: 1, mouseEvents: 345, keyEvents: 1200, app: 'VS Code' },
+    { id: 2, employee: 'Alice Smith', time: '10:05 - 10:10 AM', activeMin: 5, idleMin: 0, mouseEvents: 412, keyEvents: 1540, app: 'Chrome' },
+    { id: 3, employee: 'Bob Johnson', time: '09:00 - 09:05 AM', activeMin: 2, idleMin: 3, mouseEvents: 50, keyEvents: 0, app: 'Slack' }
   ]
 
   return (
@@ -23,6 +29,7 @@ export function ManagerDashboard({ onLogout }: { onLogout: () => void }) {
             <button className={activeTab === 'SHIFTS' ? 'active' : ''} onClick={() => setActiveTab('SHIFTS')}>Shifts</button>
             <button className={activeTab === 'TASKS' ? 'active' : ''} onClick={() => setActiveTab('TASKS')}>Tasks</button>
             <button className={activeTab === 'SUBMISSIONS' ? 'active' : ''} onClick={() => setActiveTab('SUBMISSIONS')}>Review Center</button>
+            <button className={activeTab === 'ACTIVITY' ? 'active' : ''} onClick={() => setActiveTab('ACTIVITY')}>Activity Logs</button>
           </nav>
           <button onClick={onLogout}>Logout</button>
         </div>
@@ -108,6 +115,39 @@ export function ManagerDashboard({ onLogout }: { onLogout: () => void }) {
                 </div>
               </div>
             </div>
+          </section>
+        )}
+
+        {activeTab === 'ACTIVITY' && (
+          <section className="card fade-in">
+            <h2>Activity Logs</h2>
+            <p style={{ color: 'var(--text-muted)' }}>Aggregated 5-minute activity chunks for privacy-preserving monitoring.</p>
+            <table className="data-table" style={{ marginTop: '1rem' }}>
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Time Chunk</th>
+                  <th>Active (min)</th>
+                  <th>Idle (min)</th>
+                  <th>Mouse Evts</th>
+                  <th>Key Evts</th>
+                  <th>Top App</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activityLogs.map(log => (
+                  <tr key={log.id}>
+                    <td><strong>{log.employee}</strong></td>
+                    <td>{log.time}</td>
+                    <td><span style={{ color: log.activeMin > 0 ? '#10b981' : 'inherit' }}>{log.activeMin}m</span></td>
+                    <td><span style={{ color: log.idleMin > 0 ? '#f59e0b' : 'inherit' }}>{log.idleMin}m</span></td>
+                    <td>{log.mouseEvents}</td>
+                    <td>{log.keyEvents}</td>
+                    <td>{log.app}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </section>
         )}
       </main>

@@ -2,6 +2,42 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { spawn, ChildProcess } from 'child_process'
+
+let trackerProcess: ChildProcess | null = null
+
+function startTracker(token: string) {
+  if (trackerProcess) return
+
+  // In production, this path needs to resolve to a bundled executable
+  // For development, we run the python script directly
+  const trackerPath = join(__dirname, '../../../../tracker/core.py')
+  
+  // Using python (or python3 on mac/linux)
+  const pythonExecutable = process.platform === 'win32' ? 'python' : 'python3'
+  
+  trackerProcess = spawn(pythonExecutable, [trackerPath, '--token', token])
+  
+  trackerProcess.stdout?.on('data', (data) => {
+    console.log(`Tracker: ${data}`)
+  })
+  
+  trackerProcess.stderr?.on('data', (data) => {
+    console.error(`Tracker Error: ${data}`)
+  })
+
+  trackerProcess.on('close', (code) => {
+    console.log(`Tracker process exited with code ${code}`)
+    trackerProcess = null
+  })
+}
+
+function stopTracker() {
+  if (trackerProcess) {
+    trackerProcess.kill('SIGINT')
+    trackerProcess = null
+  }
+}
 
 function createWindow(): void {
   // Create the browser window.
@@ -47,6 +83,15 @@ app.whenReady().then(() => {
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
+  })
+
+  // IPC handlers for tracking engine
+  ipcMain.on('start-tracking', (_, token) => {
+    startTracker(token)
+  })
+  
+  ipcMain.on('stop-tracking', () => {
+    stopTracker()
   })
 
   // IPC test

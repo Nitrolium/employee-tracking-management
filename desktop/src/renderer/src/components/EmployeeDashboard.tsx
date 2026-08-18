@@ -2,6 +2,22 @@ import { useState } from 'react'
 
 export function EmployeeDashboard({ onLogout }: { onLogout: () => void }) {
   const [selectedTask, setSelectedTask] = useState<any>(null)
+  const [isTracking, setIsTracking] = useState(false)
+
+  const toggleTracking = () => {
+    if (isTracking) {
+      if ((window as any).api) {
+        (window as any).api.stopTracking()
+      }
+      setIsTracking(false)
+    } else {
+      if ((window as any).api) {
+        // Pass dummy token for now, in a real app this is the actual JWT
+        (window as any).api.startTracking('dummy-jwt-token')
+      }
+      setIsTracking(true)
+    }
+  }
 
   const tasks = [
     { id: 1, title: 'Fix UI Bug', description: 'Resolve the CSS alignment issue on the dashboard.', deadline: 'Today, 5:00 PM', status: 'ASSIGNED' },
@@ -11,8 +27,39 @@ export function EmployeeDashboard({ onLogout }: { onLogout: () => void }) {
   return (
     <div className="dashboard employee-dashboard">
       <header>
-        <h1>Employee Dashboard</h1>
-        <button onClick={onLogout}>Logout</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <h1>Employee Dashboard</h1>
+          {isTracking && (
+            <span style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '0.5rem', 
+              background: '#dcfce7', 
+              color: '#166534', 
+              padding: '0.25rem 0.75rem', 
+              borderRadius: '9999px',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              animation: 'pulse 2s infinite'
+            }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#16a34a' }}></span>
+              Tracking Active
+            </span>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button 
+            onClick={toggleTracking}
+            style={{ 
+              background: isTracking ? '#ef4444' : '#10b981', 
+              color: 'white',
+              border: 'none'
+            }}
+          >
+            {isTracking ? 'Stop Tracking' : 'Start Tracking'}
+          </button>
+          <button onClick={onLogout}>Logout</button>
+        </div>
       </header>
       
       <main>
