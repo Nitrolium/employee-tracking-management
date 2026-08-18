@@ -68,3 +68,4 @@ from .task import Task, TaskAssignment, TaskStatusEnum
 from .file import FileRecord, TaskFile, FileAssociationType
 from .submission import Submission, SubmissionFile, SubmissionStatusEnum
 from .activity import ActivitySession, ActivitySummary, ApplicationUsage, ActivityStatusEnum
+from .evaluation import Evaluation

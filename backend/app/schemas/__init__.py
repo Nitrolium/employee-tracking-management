@@ -82,3 +82,4 @@ from .task import TaskCreate, TaskUpdate, TaskResponse, TaskAssignmentCreate, Ta
 from .file import FileCreate, FileResponse
 from .submission import SubmissionCreate, SubmissionReview, SubmissionResponse
 from .activity import ActivitySyncRequest, ActivitySummaryResponse, ActivitySessionResponse, ActivityStatusEnum
+from .evaluation import EvaluationCreate, EvaluationResponse, EmployeeReport

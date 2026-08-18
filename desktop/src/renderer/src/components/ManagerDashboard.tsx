@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 export function ManagerDashboard({ onLogout }: { onLogout: () => void }) {
-  const [activeTab, setActiveTab] = useState<'EMPLOYEES' | 'SHIFTS' | 'TASKS' | 'SUBMISSIONS' | 'ACTIVITY'>('EMPLOYEES')
+  const [activeTab, setActiveTab] = useState<'EMPLOYEES' | 'SHIFTS' | 'TASKS' | 'SUBMISSIONS' | 'ACTIVITY' | 'EVALUATIONS'>('EMPLOYEES')
   
   const employees = [
     { id: 1, name: 'Alice Smith', email: 'alice@test.com' },
@@ -30,6 +30,7 @@ export function ManagerDashboard({ onLogout }: { onLogout: () => void }) {
             <button className={activeTab === 'TASKS' ? 'active' : ''} onClick={() => setActiveTab('TASKS')}>Tasks</button>
             <button className={activeTab === 'SUBMISSIONS' ? 'active' : ''} onClick={() => setActiveTab('SUBMISSIONS')}>Review Center</button>
             <button className={activeTab === 'ACTIVITY' ? 'active' : ''} onClick={() => setActiveTab('ACTIVITY')}>Activity Logs</button>
+            <button className={activeTab === 'EVALUATIONS' ? 'active' : ''} onClick={() => setActiveTab('EVALUATIONS')}>Evaluations</button>
           </nav>
           <button onClick={onLogout}>Logout</button>
         </div>
@@ -148,6 +149,51 @@ export function ManagerDashboard({ onLogout }: { onLogout: () => void }) {
                 ))}
               </tbody>
             </table>
+          </section>
+        )}
+
+        {activeTab === 'EVALUATIONS' && (
+          <section className="card fade-in">
+            <h2>Performance Evaluations</h2>
+            <p>Generate reports combining Task Submissions and Activity Data to evaluate employees.</p>
+            
+            <div className="grid-2" style={{ marginTop: '1.5rem' }}>
+              <div style={{ border: '1px solid var(--border)', padding: '1rem', borderRadius: 'var(--radius)' }}>
+                <h3>Generate Report</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+                  <select style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                    <option>Select Employee...</option>
+                    <option>Alice Smith</option>
+                    <option>Bob Johnson</option>
+                  </select>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input type="date" style={{ padding: '0.5rem', flex: 1 }} title="Start Date" />
+                    <input type="date" style={{ padding: '0.5rem', flex: 1 }} title="End Date" />
+                  </div>
+                  <button className="action-btn">Generate Comprehensive Report</button>
+                </div>
+              </div>
+
+              <div style={{ border: '1px solid var(--border)', padding: '1rem', borderRadius: 'var(--radius)', background: 'var(--background)' }}>
+                <h3>Recent Evaluations</h3>
+                <ul style={{ listStyle: 'none', padding: 0, marginTop: '1rem' }}>
+                  <li style={{ padding: '0.75rem', borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <strong>Alice Smith</strong>
+                      <span className="status-badge approved">Score: 4.5/5</span>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Oct 1 - Oct 31, 2023</div>
+                  </li>
+                  <li style={{ padding: '0.75rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <strong>Bob Johnson</strong>
+                      <span className="status-badge in_progress">Score: 3.2/5</span>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Oct 1 - Oct 31, 2023</div>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </section>
         )}
       </main>
