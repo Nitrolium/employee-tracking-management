@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import auth, managers, employees
+from app.api.routes import auth, managers, employees, shifts, tasks, files, submissions
 from app.core.config import settings
 
 app = FastAPI(
@@ -21,6 +21,10 @@ app.add_middleware(
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
 app.include_router(managers.router, prefix=f"{settings.API_V1_STR}/managers", tags=["managers"])
 app.include_router(employees.router, prefix=f"{settings.API_V1_STR}/employees", tags=["employees"])
+app.include_router(shifts.router, prefix=f"{settings.API_V1_STR}/shifts", tags=["shifts"])
+app.include_router(tasks.router, prefix=f"{settings.API_V1_STR}/tasks", tags=["tasks"])
+app.include_router(files.router, prefix=f"{settings.API_V1_STR}/files", tags=["files"])
+app.include_router(submissions.router, prefix=f"{settings.API_V1_STR}/submissions", tags=["submissions"])
 
 @app.get("/")
 def read_root():

@@ -76,3 +76,8 @@ class TeamResponse(TeamBase):
     members: List[EmployeeResponse] = []
     class Config:
         from_attributes = True
+
+from .shift import ShiftCreate, ShiftResponse, ShiftAssignmentCreate, ShiftAssignmentResponse
+from .task import TaskCreate, TaskUpdate, TaskResponse, TaskAssignmentCreate, TaskAssignmentResponse
+from .file import FileCreate, FileResponse
+from .submission import SubmissionCreate, SubmissionReview, SubmissionResponse

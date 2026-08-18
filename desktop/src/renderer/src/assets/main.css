@@ -203,3 +203,62 @@ button:hover {
   background: var(--primary);
   color: white;
 }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 1rem;
+}
+
+.tabs button {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  padding: 0.5rem 0;
+  font-weight: 500;
+  position: relative;
+}
+
+.tabs button:hover {
+  color: var(--text-main);
+  background: transparent;
+}
+
+.tabs button.active {
+  color: var(--primary);
+}
+
+.tabs button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1rem;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary);
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.assigned { background: #e0e7ff; color: #4338ca; }
+.status-badge.in_progress { background: #fef3c7; color: #b45309; }
+.status-badge.submitted { background: #dbeafe; color: #1d4ed8; }
+.status-badge.approved { background: #d1fae5; color: #059669; }
+.status-badge.rejected { background: #fee2e2; color: #b91c1c; }
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

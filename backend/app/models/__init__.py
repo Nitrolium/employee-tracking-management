@@ -62,3 +62,8 @@ class Team(Base):
     
     manager = relationship("Manager", back_populates="teams")
     members = relationship("Employee", secondary=team_members, back_populates="teams")
+
+from .shift import Shift, ShiftAssignment
+from .task import Task, TaskAssignment, TaskStatusEnum
+from .file import FileRecord, TaskFile, FileAssociationType
+from .submission import Submission, SubmissionFile, SubmissionStatusEnum
