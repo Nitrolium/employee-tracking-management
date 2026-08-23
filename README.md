@@ -52,35 +52,41 @@ uvicorn app.main:app --reload
 ```
 The backend will be available at `http://localhost:8000`. You can view the interactive API docs at `http://localhost:8000/docs`.
 
-### 3. Setup and Run the Desktop App (Terminal 3)
+### 3. Run the Manager Application
 
-The frontend is an Electron desktop app built with React and Vite.
+The Manager Application is located in `manager-desktop/` and allows creating manager accounts, adding employees, managing shifts & tasks, reviewing submissions, viewing activity telemetry, and publishing evaluations.
+
+```bash
+cd "D:\Employee-tracking&management\manager-desktop"
+node "node_modules\electron-vite\bin\electron-vite.js" dev
+```
+
+### 4. Run the Employee Application
+
+The Employee Application is located in `desktop/` and is distributed to staff. It allows employees to log in (using credentials created by their manager), view shifts, work on tasks, submit deliverables for review, toggle the privacy-preserving activity tracker, and view evaluations.
 
 ```bash
 cd "D:\Employee-tracking&management\desktop"
-
-# Install dependencies (only needed the first time)
-npm install
-
-# Start the Electron application
-npm run dev
+node "node_modules\electron-vite\bin\electron-vite.js" dev
 ```
 
 ---
 
-## Testing the Application
+## Testing & Verifying Features
 
-Once everything is running:
+1. **Manager Portal (`manager-desktop`)**:
+   - Register a manager account directly via the "Register as Manager" tab.
+   - Go to the **Employees** tab and click "+ Add New Employee" to provision employee credentials.
+   - Go to the **Shifts** tab to define working hours and assign them to employees.
+   - Go to the **Tasks** tab to create tasks and assign them to employees.
+   - Review incoming deliverables in the **Review Center** tab.
+   - Inspect non-invasive 5-minute activity chunks in the **Activity Logs** tab.
+   - Compute metrics and publish formal reviews in the **Evaluations** tab.
 
-1. **Register a Manager Account**:
-   - The desktop app defaults to a login screen. We don't have users yet!
-   - You can quickly create a manager via the API docs:
-     - Open your browser to: `http://localhost:8000/docs`
-     - Find the `POST /api/v1/auth/register/manager` endpoint.
-     - Click **Try it out**, fill in the JSON body with an email, password, and full name, and hit **Execute**.
-2. **Log In**:
-   - Go back to the Electron app and log in with the manager credentials you just created.
-   - You will see the Manager Dashboard with tabs for Employees, Shifts, Tasks, Review Center, Activity Logs, and Evaluations.
-3. **Register an Employee**:
-   - Back in the API docs, use `POST /api/v1/auth/register/employee` to create an employee account.
-   - You can then log out of the Electron app and log in as the employee to see the Employee Dashboard and try the **Start Tracking** button.
+2. **Employee Portal (`desktop`)**:
+   - Log in using the credentials provisioned by the Manager (no self-registration allowed).
+   - View assigned shifts and tasks in real-time.
+   - Click **▶ Start Tracker** to initiate background activity tracking (5-minute chunk sync).
+   - Update task status to "IN_PROGRESS" or submit deliverables for review.
+   - View formal performance evaluation feedback under "My Evaluations".
+

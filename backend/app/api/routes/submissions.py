@@ -49,6 +49,31 @@ async def create_submission(
     await db.refresh(new_submission)
     return new_submission
 
+@router.get("/", response_model=List[SubmissionResponse])
+async def list_submissions(
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    if current_user.role == RoleEnum.MANAGER:
+        result = await db.execute(select(Manager).filter(Manager.user_id == current_user.id))
+        manager = result.scalars().first()
+        if not manager:
+            return []
+        tasks_res = await db.execute(select(Task.id).filter(Task.manager_id == manager.id))
+        task_ids = tasks_res.scalars().all()
+        if not task_ids:
+            return []
+        sub_res = await db.execute(select(Submission).filter(Submission.task_id.in_(task_ids)))
+        return sub_res.scalars().all()
+    elif current_user.role == RoleEnum.EMPLOYEE:
+        emp_res = await db.execute(select(Employee).filter(Employee.user_id == current_user.id))
+        employee = emp_res.scalars().first()
+        if not employee:
+            return []
+        sub_res = await db.execute(select(Submission).filter(Submission.employee_id == employee.id))
+        return sub_res.scalars().all()
+    return []
+
 @router.patch("/{submission_id}/review", response_model=SubmissionResponse)
 async def review_submission(
     submission_id: int,

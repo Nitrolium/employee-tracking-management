@@ -1,4 +1,5 @@
 from datetime import timedelta
+from sqlalchemy.orm import selectinload
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,38 +37,10 @@ async def register_manager(
     )
     db.add(new_manager)
     await db.commit()
-    await db.refresh(new_manager)
     
-    result = await db.execute(select(Manager).filter(Manager.id == new_manager.id))
-    return result.scalars().first()
-
-@router.post("/register/employee", response_model=EmployeeResponse)
-async def register_employee(
-    employee_in: EmployeeCreate,
-    db: AsyncSession = Depends(deps.get_db)
-):
-    result = await db.execute(select(User).filter(User.email == employee_in.user.email))
-    if result.scalars().first():
-        raise HTTPException(status_code=400, detail="Email already registered")
-        
-    new_user = User(
-        email=employee_in.user.email,
-        hashed_password=get_password_hash(employee_in.user.password),
-        role=RoleEnum.EMPLOYEE
+    result = await db.execute(
+        select(Manager).options(selectinload(Manager.user)).filter(Manager.id == new_manager.id)
     )
-    db.add(new_user)
-    await db.flush()
-    
-    new_employee = Employee(
-        full_name=employee_in.full_name,
-        user_id=new_user.id,
-        manager_id=employee_in.manager_id
-    )
-    db.add(new_employee)
-    await db.commit()
-    await db.refresh(new_employee)
-    
-    result = await db.execute(select(Employee).filter(Employee.id == new_employee.id))
     return result.scalars().first()
 
 @router.post("/login", response_model=Token)
@@ -83,7 +56,7 @@ async def login_access_token(
     access_token_expires = timedelta(minutes=config.settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return {
         "access_token": security.create_access_token(
-            user.email, expires_delta=access_token_expires
+            user.email, role=user.role, expires_delta=access_token_expires
         ),
         "token_type": "bearer",
     }

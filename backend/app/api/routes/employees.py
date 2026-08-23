@@ -4,6 +4,7 @@ from sqlalchemy.future import select
 from app.api import deps
 from app.models import Employee, User, RoleEnum
 from app.schemas import EmployeeResponse
+from sqlalchemy.orm import selectinload
 
 router = APIRouter()
 
@@ -15,7 +16,9 @@ async def read_employee_me(
     if current_user.role != RoleEnum.EMPLOYEE:
         raise HTTPException(status_code=400, detail="User is not an employee")
     
-    result = await db.execute(select(Employee).filter(Employee.user_id == current_user.id))
+    result = await db.execute(
+        select(Employee).options(selectinload(Employee.user)).filter(Employee.user_id == current_user.id)
+    )
     employee = result.scalars().first()
     if not employee:
         raise HTTPException(status_code=404, detail="Employee profile not found")

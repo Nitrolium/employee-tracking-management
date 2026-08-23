@@ -1,3 +1,4 @@
+from sqlalchemy.orm import selectinload
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -37,10 +38,11 @@ async def create_employee(
     )
     db.add(new_employee)
     await db.commit()
-    await db.refresh(new_employee)
     
     # Needs fetching related user
-    result = await db.execute(select(Employee).filter(Employee.id == new_employee.id))
+    result = await db.execute(
+        select(Employee).options(selectinload(Employee.user)).filter(Employee.id == new_employee.id)
+    )
     created_employee = result.scalars().first()
     return created_employee
 
@@ -70,5 +72,7 @@ async def list_employees(
     result = await db.execute(select(Manager).filter(Manager.user_id == current_manager.id))
     manager = result.scalars().first()
     
-    result = await db.execute(select(Employee).filter(Employee.manager_id == manager.id))
+    result = await db.execute(
+        select(Employee).options(selectinload(Employee.user)).filter(Employee.manager_id == manager.id)
+    )
     return result.scalars().all()

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Login } from './components/Login'
-import { EmployeeDashboard } from './components/EmployeeDashboard'
+import { ManagerDashboard } from './components/ManagerDashboard'
 
 function App(): JSX.Element {
   const [token, setToken] = useState<string | null>(null)
@@ -22,12 +22,12 @@ function App(): JSX.Element {
 
   return (
     <div className="app-container fade-in">
-      {role === 'EMPLOYEE' ? (
-        <EmployeeDashboard onLogout={handleLogout} token={token} />
+      {role === 'MANAGER' ? (
+        <ManagerDashboard onLogout={handleLogout} token={token} />
       ) : (
         <div style={{ padding: '2rem', textAlign: 'center' }}>
           <h2>Access Denied</h2>
-          <p>This is the Employee application. Please use the Manager application.</p>
+          <p>This is the Manager application. Please use the Employee application for staff accounts.</p>
           <button onClick={handleLogout} style={{ marginTop: '1rem' }}>Log Out</button>
         </div>
       )}

@@ -49,6 +49,18 @@ async def assign_shift(
     await db.refresh(new_assignment)
     return new_assignment
 
+@router.get("/", response_model=List[ShiftResponse])
+async def list_shifts(
+    db: AsyncSession = Depends(deps.get_db),
+    current_manager: User = Depends(deps.get_current_manager)
+):
+    result = await db.execute(select(Manager).filter(Manager.user_id == current_manager.id))
+    manager = result.scalars().first()
+    if not manager:
+        raise HTTPException(status_code=400, detail="Manager profile not found")
+    result = await db.execute(select(Shift).filter(Shift.manager_id == manager.id))
+    return result.scalars().all()
+
 @router.get("/me", response_model=List[ShiftResponse])
 async def get_my_shifts(
     db: AsyncSession = Depends(deps.get_db),
