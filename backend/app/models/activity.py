@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .base import Base
 
-class ActivityStatusEnum(enum.Enum):
+class ActivityStatusEnum(str, enum.Enum):
     ACTIVE = "ACTIVE"
     IDLE = "IDLE"
     LOCKED = "LOCKED"

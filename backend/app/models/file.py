@@ -4,7 +4,7 @@ from sqlalchemy.sql import func
 import enum
 from .base import Base
 
-class FileAssociationType(enum.Enum):
+class FileAssociationType(str, enum.Enum):
     TASK = "TASK"
     TEAM = "TEAM"
     EMPLOYEE = "EMPLOYEE"

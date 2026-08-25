@@ -4,19 +4,46 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { spawn, ChildProcess } from 'child_process'
 
+import { existsSync } from 'fs'
+
 let trackerProcess: ChildProcess | null = null
+
+function getPythonPath(): string {
+  const possiblePaths = [
+    join(__dirname, '../../../../backend/venv/Scripts/python.exe'),
+    join(__dirname, '../../../../backend/.venv/Scripts/python.exe'),
+    join(app.getAppPath(), '../backend/venv/Scripts/python.exe'),
+    join(app.getAppPath(), '../backend/.venv/Scripts/python.exe'),
+    join(__dirname, '../../../../backend/venv/bin/python3'),
+    join(__dirname, '../../../../backend/.venv/bin/python3')
+  ]
+  for (const p of possiblePaths) {
+    if (existsSync(p)) return p
+  }
+  return process.platform === 'win32' ? 'python' : 'python3'
+}
+
+function getTrackerPath(): string {
+  const possiblePaths = [
+    join(__dirname, '../../../../tracker/core.py'),
+    join(app.getAppPath(), '../tracker/core.py'),
+    join(process.cwd(), 'tracker/core.py')
+  ]
+  for (const p of possiblePaths) {
+    if (existsSync(p)) return p
+  }
+  return join(__dirname, '../../../../tracker/core.py')
+}
 
 function startTracker(token: string) {
   if (trackerProcess) return
 
-  // In production, this path needs to resolve to a bundled executable
-  // For development, we run the python script directly
-  const trackerPath = join(__dirname, '../../../../tracker/core.py')
+  const trackerPath = getTrackerPath()
+  const pythonExecutable = getPythonPath()
   
-  // Using python (or python3 on mac/linux)
-  const pythonExecutable = process.platform === 'win32' ? 'python' : 'python3'
+  console.log(`Starting tracker with python: ${pythonExecutable} at ${trackerPath}`)
   
-  trackerProcess = spawn(pythonExecutable, [trackerPath, '--token', token])
+  trackerProcess = spawn(pythonExecutable, [trackerPath, '--token', token, '--interval', '30'])
   
   trackerProcess.stdout?.on('data', (data) => {
     console.log(`Tracker: ${data}`)

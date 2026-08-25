@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .base import Base
 
-class SubmissionStatusEnum(enum.Enum):
+class SubmissionStatusEnum(str, enum.Enum):
     PENDING = "PENDING"
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"

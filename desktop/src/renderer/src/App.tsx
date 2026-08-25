@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Login } from './components/Login'
 import { EmployeeDashboard } from './components/EmployeeDashboard'
 
-function App(): JSX.Element {
+function App() {
   const [token, setToken] = useState<string | null>(null)
   const [role, setRole] = useState<string | null>(null)
 
@@ -17,11 +17,15 @@ function App(): JSX.Element {
   }
 
   if (!token) {
-    return <Login onLogin={handleLogin} />
+    return (
+      <div className="app-layout centered">
+        <Login onLogin={handleLogin} />
+      </div>
+    )
   }
 
   return (
-    <div className="app-container fade-in">
+    <div className="app-layout fade-in">
       {role === 'EMPLOYEE' ? (
         <EmployeeDashboard onLogout={handleLogout} token={token} />
       ) : (

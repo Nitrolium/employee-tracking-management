@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .base import Base
 
-class TaskStatusEnum(enum.Enum):
+class TaskStatusEnum(str, enum.Enum):
     ASSIGNED = "ASSIGNED"
     ACCEPTED = "ACCEPTED"
     IN_PROGRESS = "IN_PROGRESS"

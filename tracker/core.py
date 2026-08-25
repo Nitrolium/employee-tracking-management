@@ -11,8 +11,10 @@ active_seconds = 0
 idle_seconds = 0
 last_input_time = time.time()
 
-IDLE_THRESHOLD_SECONDS = 180 # 3 minutes
-CHUNK_INTERVAL_SECONDS = 300 # 5 minutes
+import argparse
+
+IDLE_THRESHOLD_SECONDS = 120 # 2 minutes
+CHUNK_INTERVAL_SECONDS = 60 # 1 minute chunks for responsive feedback
 
 def on_mouse_move(x, y):
     global mouse_events, last_input_time
@@ -30,22 +32,27 @@ def on_key_press(key):
     last_input_time = time.time()
 
 def get_active_window():
-    # Simplified OS-agnostic window fetcher for demonstration
-    # In a full implementation, this uses psutil and pygetwindow depending on sys.platform
     try:
         import sys
         if sys.platform == 'win32':
             import pygetwindow as gw
             window = gw.getActiveWindow()
-            return window.title if window else "Unknown Window"
+            return window.title if window else "Desktop"
     except Exception:
         pass
-    return "Unknown Window"
+    return "Workspace"
 
 def main():
     global mouse_events, keyboard_events, active_seconds, idle_seconds, last_input_time
     
-    sync_manager = SyncManager()
+    parser = argparse.ArgumentParser(description="Employee Activity Tracker Engine")
+    parser.add_argument("--token", type=str, default="", help="JWT auth token")
+    parser.add_argument("--api-url", type=str, default="http://127.0.0.1:8000/api/v1/activity/sync", help="Backend sync URL")
+    parser.add_argument("--interval", type=int, default=CHUNK_INTERVAL_SECONDS, help="Chunk interval in seconds")
+    args = parser.parse_args()
+
+    chunk_interval = args.interval or CHUNK_INTERVAL_SECONDS
+    sync_manager = SyncManager(token=args.token, api_url=args.api_url)
     
     # Start listeners
     mouse_listener = mouse.Listener(on_move=on_mouse_move, on_click=on_mouse_click)
@@ -76,11 +83,11 @@ def main():
             app_usages[active_window] = app_usages.get(active_window, 0) + 1
             
             # Check if chunk is complete
-            if (datetime.datetime.utcnow() - chunk_start).total_seconds() >= CHUNK_INTERVAL_SECONDS:
+            if (datetime.datetime.utcnow() - chunk_start).total_seconds() >= chunk_interval:
                 # Prepare summary
                 summary = {
                     "timestamp": chunk_start.isoformat() + "Z",
-                    "duration_minutes": CHUNK_INTERVAL_SECONDS // 60,
+                    "duration_minutes": max(1, chunk_interval // 60),
                     "active_duration_seconds": active_seconds,
                     "idle_duration_seconds": idle_seconds,
                     "mouse_event_count": mouse_events,

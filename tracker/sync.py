@@ -5,11 +5,12 @@ import time
 import requests
 
 BUFFER_FILE = "activity_buffer.json"
-API_URL = "http://localhost:8000/api/v1/activity/sync"
-TOKEN = "dummy-token"  # In a real app, this is passed from Electron via CLI args or IPC
+DEFAULT_API_URL = "http://127.0.0.1:8000/api/v1/activity/sync"
 
 class SyncManager:
-    def __init__(self):
+    def __init__(self, token: str = "", api_url: str = DEFAULT_API_URL):
+        self.token = token
+        self.api_url = api_url or DEFAULT_API_URL
         self.buffer = []
         self.load_buffer()
         
@@ -35,7 +36,7 @@ class SyncManager:
         
     def _sync_loop(self):
         while True:
-            time.sleep(60) # Try syncing every 60 seconds
+            time.sleep(15) # Check for sync every 15 seconds
             if not self.buffer:
                 continue
                 
@@ -44,8 +45,8 @@ class SyncManager:
             payload = {"summaries": to_sync}
             
             try:
-                headers = {"Authorization": f"Bearer {TOKEN}"}
-                response = requests.post(API_URL, json=payload, headers=headers, timeout=10)
+                headers = {"Authorization": f"Bearer {self.token}"} if self.token else {}
+                response = requests.post(self.api_url, json=payload, headers=headers, timeout=10)
                 
                 if response.status_code == 200:
                     # Sync successful, remove synced items from buffer
@@ -53,6 +54,6 @@ class SyncManager:
                     self.save_buffer()
                     print(f"Successfully synced {len(to_sync)} summaries.")
                 else:
-                    print(f"Sync failed with status: {response.status_code}")
+                    print(f"Sync failed with status: {response.status_code} - {response.text}")
             except requests.RequestException as e:
                 print(f"Network error during sync: {e}. Will retry later.")

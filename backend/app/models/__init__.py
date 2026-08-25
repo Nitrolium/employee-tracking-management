@@ -4,7 +4,7 @@ from sqlalchemy.sql import func
 import enum
 from .base import Base
 
-class RoleEnum(enum.Enum):
+class RoleEnum(str, enum.Enum):
     ADMIN = "ADMIN"
     MANAGER = "MANAGER"
     EMPLOYEE = "EMPLOYEE"

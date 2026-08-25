@@ -67,13 +67,18 @@ class TeamBase(BaseModel):
     name: str
 
 class TeamCreate(TeamBase):
-    pass
+    member_employee_ids: Optional[List[int]] = []
+
+class AddTeamMembersRequest(BaseModel):
+    employee_ids: List[int]
 
 class TeamResponse(TeamBase):
     id: int
     manager_id: int
     created_at: datetime
     members: List[EmployeeResponse] = []
+    member_count: Optional[int] = 0
+
     class Config:
         from_attributes = True
 

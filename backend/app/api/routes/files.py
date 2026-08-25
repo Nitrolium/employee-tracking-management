@@ -10,8 +10,11 @@ from app.schemas.file import FileResponse
 import uuid
 
 router = APIRouter()
-UPLOAD_DIR = "uploads"
-ALLOWED_EXTENSIONS = {".pdf", ".zip", ".docx", ".xlsx", ".jpg", ".png", ".txt"}
+UPLOAD_DIR = os.path.join(os.getcwd(), "uploads")
+ALLOWED_EXTENSIONS = {
+    ".pdf", ".zip", ".docx", ".xlsx", ".csv", ".jpg", ".jpeg", ".png", 
+    ".txt", ".json", ".md", ".tar", ".gz", ".7z", ".gif", ".svg", ".doc", ".xls", ".ppt", ".pptx"
+}
 
 @router.post("/upload", response_model=FileResponse)
 async def upload_file(
@@ -19,10 +22,12 @@ async def upload_file(
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    
     # Validate extension
-    ext = os.path.splitext(file.filename)[1].lower()
-    if ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(status_code=400, detail=f"File extension {ext} not allowed.")
+    ext = os.path.splitext(file.filename)[1].lower() if file.filename else ""
+    if ext and ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail=f"File extension '{ext}' not allowed.")
         
     # Generate unique filename
     unique_filename = f"{uuid.uuid4()}{ext}"
