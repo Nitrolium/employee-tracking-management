@@ -425,7 +425,12 @@ export function EmployeeDashboard({ onLogout, token }: EmployeeDashboardProps) {
           <button onClick={loadData} className="btn-outline btn-sm" title="Refresh Dashboard Data">
             {loading ? 'Refreshing...' : '↻ Refresh'}
           </button>
-          <button onClick={onLogout} className="btn-secondary btn-sm">Log Out</button>
+          <button onClick={() => {
+            if ((window as any).api) {
+              (window as any).api.stopTracking()
+            }
+            onLogout()
+          }} className="btn-secondary btn-sm">Log Out</button>
         </div>
       </header>
 

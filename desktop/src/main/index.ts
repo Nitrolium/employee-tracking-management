@@ -10,12 +10,15 @@ let trackerProcess: ChildProcess | null = null
 
 function getPythonPath(): string {
   const possiblePaths = [
+    join(__dirname, '../../../backend/venv/Scripts/python.exe'),
+    join(__dirname, '../../../backend/.venv/Scripts/python.exe'),
     join(__dirname, '../../../../backend/venv/Scripts/python.exe'),
-    join(__dirname, '../../../../backend/.venv/Scripts/python.exe'),
     join(app.getAppPath(), '../backend/venv/Scripts/python.exe'),
-    join(app.getAppPath(), '../backend/.venv/Scripts/python.exe'),
-    join(__dirname, '../../../../backend/venv/bin/python3'),
-    join(__dirname, '../../../../backend/.venv/bin/python3')
+    join(app.getAppPath(), '../../backend/venv/Scripts/python.exe'),
+    join(process.cwd(), 'backend/venv/Scripts/python.exe'),
+    join(process.cwd(), '../backend/venv/Scripts/python.exe'),
+    join(__dirname, '../../../backend/venv/bin/python3'),
+    join(__dirname, '../../../backend/.venv/bin/python3')
   ]
   for (const p of possiblePaths) {
     if (existsSync(p)) return p
@@ -25,25 +28,32 @@ function getPythonPath(): string {
 
 function getTrackerPath(): string {
   const possiblePaths = [
+    join(__dirname, '../../../tracker/core.py'),
     join(__dirname, '../../../../tracker/core.py'),
     join(app.getAppPath(), '../tracker/core.py'),
-    join(process.cwd(), 'tracker/core.py')
+    join(app.getAppPath(), '../../tracker/core.py'),
+    join(process.cwd(), 'tracker/core.py'),
+    join(process.cwd(), '../tracker/core.py')
   ]
   for (const p of possiblePaths) {
     if (existsSync(p)) return p
   }
-  return join(__dirname, '../../../../tracker/core.py')
+  return join(process.cwd(), 'tracker/core.py')
 }
 
 function startTracker(token: string) {
-  if (trackerProcess) return
+  if (trackerProcess) {
+    stopTracker()
+  }
 
   const trackerPath = getTrackerPath()
   const pythonExecutable = getPythonPath()
   
   console.log(`Starting tracker with python: ${pythonExecutable} at ${trackerPath}`)
   
-  trackerProcess = spawn(pythonExecutable, [trackerPath, '--token', token, '--interval', '30'])
+  trackerProcess = spawn(pythonExecutable, [trackerPath, '--token', token, '--interval', '30'], {
+    cwd: join(trackerPath, '..')
+  })
   
   trackerProcess.stdout?.on('data', (data) => {
     console.log(`Tracker: ${data}`)
@@ -61,7 +71,15 @@ function startTracker(token: string) {
 
 function stopTracker() {
   if (trackerProcess) {
-    trackerProcess.kill('SIGINT')
+    try {
+      if (process.platform === 'win32' && trackerProcess.pid) {
+        spawn('taskkill', ['/pid', trackerProcess.pid.toString(), '/f', '/t'])
+      } else {
+        trackerProcess.kill('SIGINT')
+      }
+    } catch (err) {
+      console.error('Error stopping tracker:', err)
+    }
     trackerProcess = null
   }
 }

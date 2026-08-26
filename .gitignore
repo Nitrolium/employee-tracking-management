@@ -13,7 +13,12 @@ dist/
 dist-electron/
 out/
 release/
+*.tsbuildinfo
+
+# Tracker local buffer
+activity_buffer.json
 
 # OS
 .DS_Store
 Thumbs.db
+

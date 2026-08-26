@@ -1,20 +1,24 @@
+import os
+import sys
 import time
 import threading
 import datetime
-from pynput import mouse, keyboard
+import argparse
+import requests
+
+# Ensure tracker directory is on Python path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sync import SyncManager
 
-# Global counters for the current chunk
+# Global counters for current chunk
 mouse_events = 0
 keyboard_events = 0
 active_seconds = 0
 idle_seconds = 0
 last_input_time = time.time()
 
-import argparse
-
-IDLE_THRESHOLD_SECONDS = 120 # 2 minutes
-CHUNK_INTERVAL_SECONDS = 60 # 1 minute chunks for responsive feedback
+IDLE_THRESHOLD_SECONDS = 120 # 2 minutes before classifying as idle
+CHUNK_INTERVAL_SECONDS = 30 # 30 second chunks for responsive feedback
 
 def on_mouse_move(x, y):
     global mouse_events, last_input_time
@@ -31,16 +35,46 @@ def on_key_press(key):
     keyboard_events += 1
     last_input_time = time.time()
 
-def get_active_window():
+def get_active_window_info():
+    """Retrieve the current active window title and application name on Windows."""
+    title = "Desktop Workspace"
+    app_name = "Desktop"
     try:
-        import sys
         if sys.platform == 'win32':
             import pygetwindow as gw
             window = gw.getActiveWindow()
-            return window.title if window else "Desktop"
+            if window and window.title:
+                title = window.title.strip()
+                if " - " in title:
+                    parts = title.split(" - ")
+                    app_name = parts[-1].strip()
+                else:
+                    app_name = title
+            else:
+                title = "Desktop Workspace"
+                app_name = "Workspace"
     except Exception:
         pass
-    return "Workspace"
+    return app_name, title
+
+def send_heartbeat(api_url: str, token: str, status: str, app_name: str, window_title: str, active_sec: int, idle_sec: int):
+    try:
+        hb_url = api_url.replace("/sync", "/heartbeat")
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"} if token else {}
+        requests.post(
+            hb_url,
+            json={
+                "status": status,
+                "app_name": app_name,
+                "window_title": window_title,
+                "active_seconds": active_sec,
+                "idle_seconds": idle_sec
+            },
+            headers=headers,
+            timeout=4
+        )
+    except Exception:
+        pass
 
 def main():
     global mouse_events, keyboard_events, active_seconds, idle_seconds, last_input_time
@@ -54,17 +88,23 @@ def main():
     chunk_interval = args.interval or CHUNK_INTERVAL_SECONDS
     sync_manager = SyncManager(token=args.token, api_url=args.api_url)
     
-    # Start listeners
-    mouse_listener = mouse.Listener(on_move=on_mouse_move, on_click=on_mouse_click)
-    keyboard_listener = keyboard.Listener(on_press=on_key_press)
-    
-    mouse_listener.start()
-    keyboard_listener.start()
+    # Start input listeners
+    try:
+        from pynput import mouse, keyboard
+        mouse_listener = mouse.Listener(on_move=on_mouse_move, on_click=on_mouse_click)
+        keyboard_listener = keyboard.Listener(on_press=on_key_press)
+        mouse_listener.start()
+        keyboard_listener.start()
+    except Exception as e:
+        print(f"Warning: Could not start pynput listeners ({e}). Running in window tracking mode.")
+        mouse_listener = None
+        keyboard_listener = None
     
     chunk_start = datetime.datetime.utcnow()
     app_usages = {}
+    last_heartbeat_time = 0
 
-    print("Tracker started. Monitoring activity...")
+    print("Tracker engine started. Monitoring active window and inputs...")
 
     try:
         while True:
@@ -74,20 +114,32 @@ def main():
             # Determine state
             if current_time - last_input_time > IDLE_THRESHOLD_SECONDS:
                 idle_seconds += 1
-                active_window = "Idle"
+                app_name = "Idle"
+                window_title = "User Inactive / Idle"
+                status = "IDLE"
             else:
                 active_seconds += 1
-                active_window = get_active_window()
+                app_name, window_title = get_active_window_info()
+                status = "ACTIVE"
                 
             # Track app usage
-            app_usages[active_window] = app_usages.get(active_window, 0) + 1
+            app_key = app_name or "Desktop"
+            app_usages[app_key] = app_usages.get(app_key, 0) + 1
+
+            # Heartbeat every 8 seconds
+            if current_time - last_heartbeat_time >= 8:
+                last_heartbeat_time = current_time
+                threading.Thread(
+                    target=send_heartbeat,
+                    args=(args.api_url, args.token, status, app_name, window_title, 8 if status == "ACTIVE" else 0, 8 if status == "IDLE" else 0),
+                    daemon=True
+                ).start()
             
-            # Check if chunk is complete
+            # Check if chunk interval is complete
             if (datetime.datetime.utcnow() - chunk_start).total_seconds() >= chunk_interval:
-                # Prepare summary
                 summary = {
                     "timestamp": chunk_start.isoformat() + "Z",
-                    "duration_minutes": max(1, chunk_interval // 60),
+                    "duration_minutes": max(1, int(chunk_interval // 60)),
                     "active_duration_seconds": active_seconds,
                     "idle_duration_seconds": idle_seconds,
                     "mouse_event_count": mouse_events,
@@ -110,9 +162,12 @@ def main():
                 chunk_start = datetime.datetime.utcnow()
                 
     except KeyboardInterrupt:
-        print("Tracker stopping...")
-        mouse_listener.stop()
-        keyboard_listener.stop()
+        print("Tracker engine stopping...")
+        if mouse_listener:
+            mouse_listener.stop()
+        if keyboard_listener:
+            keyboard_listener.stop()
 
 if __name__ == "__main__":
     main()
+
