@@ -54,13 +54,19 @@ async def record_heartbeat(
     if not employee:
         raise HTTPException(status_code=404, detail="Employee profile not found")
 
+    existing = _live_presence_store.get(employee.id, {})
+    live_active = existing.get("live_active_seconds", 0) + (heartbeat.active_seconds or 0)
+    live_idle = existing.get("live_idle_seconds", 0) + (heartbeat.idle_seconds or 0)
+
     _live_presence_store[employee.id] = {
         "employee_id": employee.id,
         "status": heartbeat.status,
-        "window_title": heartbeat.window_title,
-        "app_name": heartbeat.app_name,
+        "window_title": heartbeat.window_title or existing.get("window_title"),
+        "app_name": heartbeat.app_name or existing.get("app_name"),
         "last_heartbeat": datetime.utcnow(),
-        "is_tracking": heartbeat.status not in ["TRACKING_STOPPED", "OFFLINE"]
+        "is_tracking": heartbeat.status not in ["TRACKING_STOPPED", "OFFLINE"],
+        "live_active_seconds": live_active,
+        "live_idle_seconds": live_idle
     }
     return {"status": "ok", "employee_id": employee.id}
 
@@ -126,8 +132,8 @@ async def get_live_team_status(
             )
         )
         today_summaries = summaries_res.scalars().all()
-        active_sec = sum(s.active_duration_seconds for s in today_summaries)
-        idle_sec = sum(s.idle_duration_seconds for s in today_summaries)
+        active_sec = sum(s.active_duration_seconds for s in today_summaries) + presence.get("live_active_seconds", 0)
+        idle_sec = sum(s.idle_duration_seconds for s in today_summaries) + presence.get("live_idle_seconds", 0)
         keys_count = sum(s.keyboard_event_count for s in today_summaries)
         clicks_count = sum(s.mouse_event_count for s in today_summaries)
 
@@ -425,6 +431,11 @@ async def sync_activity(
             db.add(new_app)
             
     await db.commit()
+
+    if employee.id in _live_presence_store:
+        _live_presence_store[employee.id]["live_active_seconds"] = 0
+        _live_presence_store[employee.id]["live_idle_seconds"] = 0
+
     return {"status": "success", "synced": len(sync_req.summaries)}
 
 @router.get("/summaries", response_model=List[ActivitySummaryResponse])
